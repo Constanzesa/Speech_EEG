@@ -44,23 +44,15 @@ def combine_configs(head_config):
     return combined_config
 
 def main(config = None):
-    # Initialize a new wandb run
     wandb.init(config=config)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # Initialize data module
     dm = DataModule(**wandb.config["datamodule"])
     
     print(f"DataModule Loaded: {dm}")
 
-    # Initialize model
-    # if wandb.config["model_name"] == "TSCEPTION":
-    #     model = TSception(**wandb.config["model"], epochs = wandb.config.trainer["max_epochs"]) 
+
     if wandb.config["model_name"] == "EEGNET":
         model = EEGNetv4(**wandb.config["model"], epochs = wandb.config.trainer["max_epochs"]) 
-    # elif wandb.config["model_name"] == "CHANNELNET":
-    #     model = ChannelNet(**wandb.config["model"], epochs = wandb.config.trainer["max_epochs"])
-    # elif wandb.config["model_name"] == "CONFORMER":
-    #     model = Conformer(**wandb.config["model"], epochs = wandb.config.trainer["max_epochs"])
     elif wandb.config["model_name"] == "EEGNET_Embedding":
         model = EEGNet_Embedding(**wandb.config["model"], epochs = wandb.config.trainer["max_epochs"]) 
     
@@ -89,38 +81,27 @@ def main(config = None):
     lr_monitor = LearningRateMonitor(logging_interval="epoch")
 
     early_stopping_callback = EarlyStopping(
-            monitor="val_acc",  # You can also monitor "val_loss"
-            patience=10,  # Number of epochs to wait for improvement
-            mode="max",  # "min" for loss, "max" for accuracy or metrics to be maximized
+            monitor="val_acc",  
+            patience=10, 
+            mode="max",  
             verbose=True,
         )
-    # Initialize trainer
+
     trainer = pl.Trainer(
         max_epochs = wandb.config.trainer["max_epochs"],
         logger = pl.loggers.WandbLogger(save_dir="./results/wandb_logs/"),
         callbacks = [checkpoint_callback, lr_monitor,early_stopping_callback],
         default_root_dir="./results/checkpoints", 
-        #pl.callbacks.EarlyStopping(monitor="val_acc")
         accelerator="auto"
     )
 
-    # Train model 
-    trainer.fit(model = model, datamodule = dm)
-
-    # if wandb.config["fine_tuning"]:
-    #     trainer.fit(model=model)
-
-    # Test model
-    #Note: this should only be used once!
     if wandb.config["final_model"] == True:
-        trainer.test(datamodule = dm) #test_dataset is integrated in datamodule
+        trainer.test(datamodule = dm) 
 
     wandb.run.finish()
 
-# Initialize new sweep (Change subject and model name to run different models)
-# sweep_config = read_config(config_path = "./pytorch/configs/final/P001/EEGNET_P001.yaml")
 
-sweep_config = read_config(config_path = "/Users/arnavkapur/Desktop/Analysis_3DImagery/imagery2024/Generation/pytorch/configs/final/P001/EEGNET_P001.yaml")
+sweep_config = read_config(config_path = "/Users/arnavkapur/Desktop/EEG_Speech/Speech_EEG/Classification/configs/final/EEGNET.yaml")
 
 sweep_config = combine_configs(sweep_config) #Comment out for test run
 sweep_id = wandb.sweep(sweep_config, project=sweep_config["name"])
@@ -134,13 +115,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--config_path", 
         type=str, 
-        default="/Users/arnavkapur/Desktop/Analysis_3DImagery/imagery2024/Generation/pytorch/configs/final/P001/EEGNET_P001.yaml",
-        # default="./pytorch/configs/final/P001/EEGNET_P001.yaml",
+        default="/Users/arnavkapur/Desktop/EEG_Speech/Speech_EEG/Classification/configs/final/EEGNET.yaml",
         help="Path to config file")
     args = parser.parse_args()
 
-    sweep_config = read_config(config_path = args.config_path) # Read config file
+    sweep_config = read_config(config_path = args.config_path)
     print("Using config: {}".format(args.config_path))
     sweep_config = combine_configs(sweep_config)
-    sweep_id = wandb.sweep(sweep_config, project=sweep_config["name"]) # Init sweep
-    wandb.agent(sweep_id, function=main) # Run the sweep
+    sweep_id = wandb.sweep(sweep_config, project=sweep_config["name"]) 
+    wandb.agent(sweep_id, function=main) 

@@ -1,4 +1,0 @@
-combine:
-- ./pytorch/configs/base.yaml
-- ./pytorch/configs/models/EEGNET_embedding.yaml
-- ./pytorch/configs/subjects/P008.yaml

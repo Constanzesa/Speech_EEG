@@ -45,7 +45,7 @@ class EEGNetv4(base_model):
         weight_decay = 0.0,
         epochs = 100,
         in_chans = 64,
-        n_classes = 6,
+        n_classes = 5,
         final_conv_length="auto",
         input_window_samples=None,
         #Convolutions and Pooling (depth of spatial conv = F2*D)

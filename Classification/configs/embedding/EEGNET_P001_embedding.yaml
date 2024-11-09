@@ -1,4 +1,4 @@
 combine:
-- ./pytorch/configs/base.yaml
-- ./pytorch/configs/models/EEGNET_embedding.yaml
-- ./pytorch/configs/subjects/P001.yaml
+- ./Classification/configs/base.yaml
+- ./Classification/configs/models/EEGNET.yaml
+- ./Classification/configs/subjects/ME.yaml

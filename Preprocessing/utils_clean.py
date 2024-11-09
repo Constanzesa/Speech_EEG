@@ -43,9 +43,9 @@ def show_streams(data):
 
 def find_stream(name, streams):
     if name == 'eeg':
-        name = 'EE225-000000-000867-02-DESKTOP-4OD688D'
+        name = 'E7240457_EEG'
     elif name == 'marker':
-        name = 'LSLMarkersInletStreamName2'
+        name = 'LSLTrigger'
 
     else:
         assert False
@@ -128,12 +128,8 @@ def get_duration(marker_stream):
 
 """Setting channel names for the 64 channel headset"""
 
-def set_channel_names(data):
-    ch_names = ['Fp1', 'Fpz', 'Fp2', 'F7', 'F3', 'Fz', 'F4', 'F8', 'FC5', 'FC1', 'FC2', 'FC6', 'M1', 
-                    'T7', 'C3', 'Cz', 'C4', 'T8', 'M2', 'CP5', 'CP1', 'CP2', 'CP6', 'P7', 'P3', 'Pz', 
-                    'P4', 'P8', 'POz', 'O1', 'O2', 'EOG', 'AF7', 'AF3', 'AF4', 'AF8', 'F5', 'F1', 'F2', 
-                    'F6', 'FC3', 'FCz', 'FC4', 'C5', 'C1', 'C2', 'C6', 'CP3', 'CP4', 'P5', 'P1', 'P2', 
-                    'P6', 'PO5', 'PO3', 'PO4', 'PO6', 'FT7', 'FT8', 'TP7', 'TP8', 'PO7', 'PO8', 'Oz']
+def set_channel_names(data, ch_names):
+    
 
     # Ensure the number of channel names matches the number of channels in the data
     if len(ch_names) == len(data.info['ch_names']):
@@ -267,30 +263,30 @@ def ica_analysis(raw_removed):
     ica.apply(raw_reconstructed)
     return raw_reconstructed
 
-def ica_plot(raw_reconstructed):
-    # ica = mne.preprocessing.ICA(n_components=10, random_state=42, max_iter="auto")
-    # ica.fit(raw_removed)
-    # ica.exclude = [0,1,2,3,4,5,6,7,8,9]  # details on how we picked these are omitted here
-    # raw_reconstructed = raw_removed.copy()
-    ica.apply(raw_reconstructed)
-    ica.plot_sources(raw_removed, show_scrollbars=False)
-    ica.plot_components()
-    ica.plot_properties(raw_removed, picks = [0,1,2,3,4,5,6,7,8,9]) 
-    ica.plot_overlay(raw_removed, exclude=[0], picks="eeg")
-    raw_removed.plot_sensors(show_names=True)
+# def ica_plot(raw_reconstructed):
+#     # ica = mne.preprocessing.ICA(n_components=10, random_state=42, max_iter="auto")
+#     # ica.fit(raw_removed)
+#     # ica.exclude = [0,1,2,3,4,5,6,7,8,9]  # details on how we picked these are omitted here
+#     # raw_reconstructed = raw_removed.copy()
+#     ica.apply(raw_reconstructed)
+#     ica.plot_sources(raw_removed, show_scrollbars=False)
+#     ica.plot_components()
+#     ica.plot_properties(raw_removed, picks = [0,1,2,3,4,5,6,7,8,9]) 
+#     ica.plot_overlay(raw_removed, exclude=[0], picks="eeg")
+#     raw_removed.plot_sensors(show_names=True)
 
-    explained_var_ratio = ica.get_explained_variance_ratio(raw_removed)
-    for channel_type, ratio in explained_var_ratio.items():
-        print(
-            f"Fraction of {channel_type} variance explained by all components: " f"{ratio}"
-        )
-    explained_var_ratio = ica.get_explained_variance_ratio(raw_removed, components=[0], ch_type="eeg")
+#     explained_var_ratio = ica.get_explained_variance_ratio(raw_removed)
+#     for channel_type, ratio in explained_var_ratio.items():
+#         print(
+#             f"Fraction of {channel_type} variance explained by all components: " f"{ratio}"
+#         )
+#     explained_var_ratio = ica.get_explained_variance_ratio(raw_removed, components=[0], ch_type="eeg")
 
-    # This time, print as percentage
-    ratio_percent = round(100 * explained_var_ratio["eeg"])
-    print(
-        f"Fraction of variance in EEG signal explained by first component: "
-        f"{ratio_percent}%")
+#     # This time, print as percentage
+#     ratio_percent = round(100 * explained_var_ratio["eeg"])
+#     print(
+#         f"Fraction of variance in EEG signal explained by first component: "
+#         f"{ratio_percent}%")
     
 def create_dataset(raw_reconstructed,eeg_stream,marker_stream,df_marker):
 
@@ -439,7 +435,7 @@ def create_dataset(raw_reconstructed,eeg_stream,marker_stream,df_marker):
 def remove_breaks(dataset):
     #remove the breaks
     for i in range(len(dataset)):
-        dataset[i] = dataset[i][dataset[i]['group_label'] < 900]
+        dataset[i] = dataset[i][dataset[i]['label'] < 900]
     return dataset 
 
 def return_dataset(dataset,ch_names):
@@ -455,53 +451,56 @@ def return_dataset(dataset,ch_names):
     out.append((trial_label, labels, group_labels, eeg_matrix))
     return out 
 
-def build_class_epochs_mne(out,sfreq,ch_names,bad_channels): 
+# def build_class_epochs_mne(out,sfreq,ch_names,bad_channels): 
+#     ## Build epochs for the 6 classes 
+#     out_t = np.swapaxes(out[0][1], 1, 2)
+
+#     events = np.column_stack((np.arange(513), np.zeros(513, dtype=int), np.array(out[0][2])))
+
+#     event_dict ={'S01': 1,
+#         'S02': 2,
+#         'S03': 3,
+#         'S04': 4,
+#         'S05': 5}
+#     eeg_info = mne.create_info(ch_names=ch_names,sfreq=sfreq,ch_types=["eeg"]*64)
+#     eeg_epochs_classes= mne.EpochsArray(out_t,eeg_info,events=events,event_id=event_dict)
+#     eeg_epochs_classes.info['bads']= bad_channels
+#     return eeg_epochs_classes
+def build_class_epochs_mne(out, sfreq, ch_names, bad_channels): 
     ## Build epochs for the 6 classes 
-    out_t = np.swapaxes(out[0][3], 1, 2)
+    out_t = np.swapaxes(out[0][1], 1, 2)  # Shape: (n_epochs, n_channels, n_times)
 
-    events = np.column_stack((np.arange(468), np.zeros(468, dtype=int), np.array(out[0][2])))
+    # Get labels
+    labels = out[0][0]  # Assuming this array contains one label per epoch/trial
+    
+    # Check that the number of labels matches the number of epochs
+    num_epochs = out_t.shape[0]
+    if len(labels) != num_epochs:
+        raise ValueError("Mismatch between number of labels and number of epochs. Check your data structure.")
+    
+    # Check if labels match the event_dict codes
+    print("Labels in out[0][0]:", np.unique(labels))
 
-    event_dict ={'banana': 1,
-        'strawberry': 2,
-        'panda': 3,
-        'basketball': 4,
-        'face': 5,
-        'tiger': 6 }
-    eeg_info = mne.create_info(ch_names=ch_names,sfreq=sfreq,ch_types=["eeg"]*64)
-    eeg_epochs_classes= mne.EpochsArray(out_t,eeg_info,events=events,event_id=event_dict)
-    eeg_epochs_classes.info['bads']= bad_channels
+    # Create events array for MNE
+    events = np.column_stack((np.arange(num_epochs), np.zeros(num_epochs, dtype=int), labels))
+
+    # Ensure the event_dict matches the actual label codes
+    event_dict = {
+        'S01': 0,
+        'S02': 1,
+        'S03': 2,
+        'S04': 3,
+        'S05': 4
+    }
+    
+    eeg_info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=["eeg"] * len(ch_names))
+    eeg_epochs_classes = mne.EpochsArray(out_t, eeg_info, events=events, event_id=event_dict)
+    eeg_epochs_classes.info['bads'] = bad_channels
     return eeg_epochs_classes
 
-def build_cat_epochs_mne(out,sfreq,ch_names,bad_channels):
-        ## Built Epochs for each category in the class 
-    out_t = np.swapaxes(out[0][3], 1, 2)
-    events_cat = np.column_stack((np.arange(468), np.zeros(468, dtype=int), np.array(out[0][1])))
-    event_cat_id = {
-        'banana1': 11, 'banana2': 12, 'banana3': 13, 'banana4': 14, 'banana5': 15, 
-        'banana6': 16, 'banana7': 17, 'banana8': 18, 'banana9': 19, 'banana10': 110, 
-        'banana11': 111, 'banana12': 112, 'banana13': 113,
-        'strawberry1': 21, 'strawberry2': 22, 'strawberry3': 23, 'strawberry4': 24, 
-        'strawberry5': 25, 'strawberry6': 26, 'strawberry7': 27, 'strawberry8': 28, 
-        'strawberry9': 29, 'strawberry10': 210, 'strawberry11': 211, 'strawberry12': 212, 
-        'strawberry13': 213,
-        'panda1': 31, 'panda2': 32, 'panda3': 33, 'panda4': 34, 'panda5': 35, 
-        'panda6': 36, 'panda7': 37, 'panda8': 38, 'panda9': 39, 'panda10': 310, 
-        'panda11': 311, 'panda12': 312, 'panda13': 313,
-        'basketball1': 41, 'basketball2': 42, 'basketball3': 43, 'basketball4': 44, 
-        'basketball5': 45, 'basketball6': 46, 'basketball7': 47, 'basketball8': 48, 
-        'basketball9': 49, 'basketball10': 410, 'basketball11': 411, 'basketball12': 412, 
-        'basketball13': 413,
-        'face1': 51, 'face2': 52, 'face3': 53, 'face4': 54, 'face5': 55, 
-        'face6': 56, 'face7': 57, 'face8': 58, 'face9': 59, 'face10': 510, 
-        'face11': 511, 'face12': 512, 'face13': 513,
-        'tiger1': 61, 'tiger2': 62, 'tiger3': 63, 'tiger4': 64, 'tiger5': 65, 
-        'tiger6': 66, 'tiger7': 67, 'tiger8': 68, 'tiger9': 69, 'tiger10': 610, 
-        'tiger11': 611, 'tiger12': 612, 'tiger13': 613
-    }
-    eeg_info = mne.create_info(ch_names=ch_names,sfreq=sfreq,ch_types=["eeg"]*64)
-    eeg_epochs_objects= mne.EpochsArray(out_t,eeg_info,events=events_cat,event_id=event_cat_id)
-    eeg_epochs_objects.info['bads']= bad_channels
-    return eeg_epochs_objects
+
+
+
 
 def plot_topo(eeg_epochs,eeg_info):
     # epochs = mne.EpochsArray(eeg_epochs, eeg_info)
@@ -538,9 +537,8 @@ def plot_evoked(eeg_epochs, eeg_info, event_name):
         print(f"Event '{event_name}' not found in event_id. Please check the event name.")
 
 def standartization(out):
-    out_t = np.swapaxes(out[0][3], 1, 2)
     scaler = Scaler(scalings='mean')
-    eeg_epochs_standardized = scaler.fit_transform(out_t)
+    eeg_epochs_standardized = scaler.fit_transform(out)
     eeg_epochs_standardized.shape
     return eeg_epochs_standardized
 

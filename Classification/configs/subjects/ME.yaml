@@ -1,0 +1,14 @@
+name: P001_final
+parameters:
+  datamodule:
+    parameters:
+      data_dir: 
+        value: "/Users/arnavkapur/Desktop/EEG_Speech/DATA/PREPROCESSED/S01/eeg.npy"
+      val_run: 
+        value: "/Users/arnavkapur/Desktop/EEG_Speech/DATA/PREPROCESSED/S01/labels.npy"
+      batch_size:
+        values: [64, 128] #[32, 128]
+      num_workers:
+        value: 0
+      seed:
+        value: 42

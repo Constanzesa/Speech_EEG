@@ -60,53 +60,14 @@ class DataModule(pl.LightningDataModule):
 
         if stage == "fit" or stage is None:
             # Directly load train and validation datasets from their respective directories
-            self.train_dataset = Dataset_Large(Path(self.data_dir), label="group", train=True, special=self.special)
-            self.val_dataset = Dataset_Large(Path(self.val_run), label="group", train=False, special=self.special)
+            self.train_dataset = Dataset_Large(Path(self.data_dir), label="labels", train=True, special=self.special)
+            self.val_dataset = Dataset_Large(Path(self.val_run), label="labels", train=False, special=self.special)
 
         if stage == "test" or stage is None:
             if self.test_dir:
-                self.test_dataset = Dataset_Large(Path(self.test_dir), label="group", train=False, special=self.special)
+                self.test_dataset = Dataset_Large(Path(self.test_dir), label="labels", train=False, special=self.special)
 
-        # if stage == "fit" or stage is None:
-        #     if self.val_run: #val_run is specified when we train across sessions (Large Dataset)
-        #         self.train_dataset = Dataset_Large(Path(self.data_dir), label = "group", train = True, val_run = self.val_run, special = self.special)
-        #         self.val_dataset = Dataset_Large(Path(self.data_dir), label = "group", train = False, val_run = self.val_run, special = self.special)
-        #     else:
-        #         self.train_dataset = Dataset_Large(Path(self.data_dir), label = "group", train = True, val_run = None, special = self.special)
-        #         #Unfortunately, we need to specify some validation_set for the PL Trainer. Therefore, we just pick the first recording as
-        #         #a dummy validation_set. This leads to a high validation accuracy, but we don't care about the validation accuracy anyway
-        #         #when testing the final model.
-        #         val_run_dummy = os.listdir(self.data_dir)[0]
-        #         self.val_dataset = Dataset_Large(Path(self.data_dir), label = "group", train = False, val_run = val_run_dummy, special = self.special)
-        #         # self.dataset = Dataset_Small(Path(self.data_dir), label = "group", train = True)
-        #         # train_idx, val_idx = self._stratified_random_split(dataset=self.dataset, split=[0.8, 0.2], seed=self.seed)
-        #         # self.train_sampler = SubsetRandomSampler(train_idx)
-        #         # self.val_sampler = SubsetRandomSampler(val_idx)
-        # if stage == "test" or stage is None:
-        #     if self.test_dir:
-        #         self.test_dataset = Dataset_Large(Path(self.test_dir), label = "group", train = False, val_run = self.test_run, special = self.special)
-        #     else:
-        #         pass
 
-    # def _stratified_random_split(self, dataset, split: List = [0.8, 0.2], seed: int = None):
-    #     #Splits a dataset into train and validation set while preserving the class distribution.
-    #     #Not used anymore
-    #     np.random.seed(seed) if seed else None
-    #     train_idx = []
-    #     val_idx = []
-    #     labels = dataset.labels.numpy()
-    #     for label in np.unique(labels):
-    #         label_loc = np.argwhere(labels == label).flatten()
-    #         np.random.shuffle(label_loc)
-    #         n_train = int(split[0]*len(label_loc))
-    #         train_idx.append(label_loc[:n_train])
-    #         val_idx.append(label_loc[n_train:])
-    #     train_idx = np.concatenate(train_idx)
-    #     val_idx = np.concatenate(val_idx)
-    #     np.random.shuffle(train_idx)
-    #     np.random.shuffle(val_idx)
-    #     return train_idx, val_idx
-    
     def train_dataloader(self):
         return DataLoader(self.train_dataset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle = True) #, sampler=self.train_sampler)
 

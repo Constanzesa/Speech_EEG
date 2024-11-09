@@ -8,7 +8,7 @@ parameters:
       in_chans: 
         value: 64
       n_classes:
-        value: 6
+        value: 5
       lr:
         distribution: log_uniform_values
         min: 0.001
@@ -19,7 +19,7 @@ parameters:
         min: 0.001
         max: 0.01
       input_window_samples:
-        value: 4096
+        value: 513
       final_conv_length:
         value: "auto"
       #Convolutional Module
