@@ -19,9 +19,9 @@ parameters:
   datamodule:
     parameters:
       data_dir: 
-        value: "/Users/arnavkapur/Desktop/Analysis_3DImagery/imagery2024/PREPROCESSED_DATA/S01/eeg/P10_01.npy"
+        value: "./PREPROCESSED_DATA/S01/eeg.npy"
       test_dir:
-        value: "/Users/arnavkapur/Desktop/Analysis_3DImagery/imagery2024/Generation/Segmented_data/S02/test/data.npy"
+        value: "./PREPROCESSED_DATA/S01/test/"
       test_run:
         value: "data.npy" #test set
       batch_size:
