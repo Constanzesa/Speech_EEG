@@ -467,19 +467,17 @@ def return_dataset(dataset,ch_names):
 #     eeg_epochs_classes.info['bads']= bad_channels
 #     return eeg_epochs_classes
 def build_class_epochs_mne(out, sfreq, ch_names, bad_channels): 
-    ## Build epochs for the 6 classes 
-    out_t = np.swapaxes(out[0][1], 1, 2)  # Shape: (n_epochs, n_channels, n_times)
 
     # Get labels
-    labels = out[0][0]  # Assuming this array contains one label per epoch/trial
+    labels = out[0]  # Assuming this array contains one label per epoch/trial
     
     # Check that the number of labels matches the number of epochs
-    num_epochs = out_t.shape[0]
+    num_epochs = out[1].shape[0]
     if len(labels) != num_epochs:
         raise ValueError("Mismatch between number of labels and number of epochs. Check your data structure.")
     
     # Check if labels match the event_dict codes
-    print("Labels in out[0][0]:", np.unique(labels))
+    print("Labels:", np.unique(labels))
 
     # Create events array for MNE
     events = np.column_stack((np.arange(num_epochs), np.zeros(num_epochs, dtype=int), labels))
@@ -494,7 +492,7 @@ def build_class_epochs_mne(out, sfreq, ch_names, bad_channels):
     }
     
     eeg_info = mne.create_info(ch_names=ch_names, sfreq=sfreq, ch_types=["eeg"] * len(ch_names))
-    eeg_epochs_classes = mne.EpochsArray(out_t, eeg_info, events=events, event_id=event_dict)
+    eeg_epochs_classes = mne.EpochsArray(out[1], eeg_info, events=events, event_id=event_dict)
     eeg_epochs_classes.info['bads'] = bad_channels
     return eeg_epochs_classes
 
