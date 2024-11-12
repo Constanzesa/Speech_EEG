@@ -3,9 +3,9 @@ parameters:
   datamodule:
     parameters:
       data_dir: 
-        value: "/Users/arnavkapur/Desktop/EEG_Speech/DATA/PREPROCESSED/S01/eeg.npy"
+        value: "/Users/arnavkapur/Desktop/EEG_Speech/DATA/PREPROCESSED/S01/sub/train/data.npy"
       val_run: 
-        value: "/Users/arnavkapur/Desktop/EEG_Speech/DATA/PREPROCESSED/S01/labels.npy"
+        value: "/Users/arnavkapur/Desktop/EEG_Speech/DATA/PREPROCESSED/S01/sub/val/data.npy"
       batch_size:
         values: [64, 128] #[32, 128]
       num_workers:

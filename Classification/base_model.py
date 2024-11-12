@@ -10,7 +10,6 @@ class base_model(pl.LightningModule):
     def __init__(self):
         super().__init__()
         self.loss = nn.CrossEntropyLoss()
->>>>>>> 8c44dfadec6ff95957f2ad11d05b45048c248e92
         self.config = None
         self.save_hyperparameters()
         self.one_cycle_lr = True

@@ -2,6 +2,7 @@ import numpy as np
 from pathlib import Path
 from typing import List, Literal
 import torch
+import os
 
 
 class Dataset_Large():
@@ -22,7 +23,7 @@ class Dataset_Large():
             self, 
             data_dir: Path, 
             # label_dir:Path,
-            label: Literal["group", "label"], 
+            label: Literal["label"], 
             train: bool = True, 
             val_run: str = None,
             special: str = None
@@ -34,12 +35,19 @@ class Dataset_Large():
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.label_names = "labels" #if label == "group" else "labels"
      
+        # Load data and labela
+        session_name = "S01"    
+        data_dir = "/Users/arnavkapur/Desktop/EEG_Speech/DATA/PREPROCESSED"
+        base_path = os.path.join(data_dir, session_name,'sub')
+        
+        if train: 
+            data_dir = os.path.join(base_path, train, "data.npy")
+            label_dir = os.path.join(base_path, train, "labels.npy")
+        else:
+            data_dir = os.path.join(base_path, 'val', "data.npy")   
+            label_dir = os.path.join(base_path,'val', "labels.npy")
         
         self.data = np.load(data_dir, allow_pickle=True)  # Shape: (trials, channels, samples)
-        if train: 
-            label_dir = "./DATA/PREPROCESSED/S01/eeg.npy"
-        else:
-            label_dir = "./DATA/PREPROCESSED/S01/labels.npy"
         self.labels = np.load(label_dir, allow_pickle=True)  # Shape: (trials,)
         
         # Convert to PyTorch tensors
@@ -48,8 +56,8 @@ class Dataset_Large():
         # self.labels = self.labels - 1  # Subtract 1 to make labels 0-indexed
 
         if special is None:
-            self.data = torch.from_numpy(self.data).to(self.device) #swap axes to get (n_trials, channels, samples) 
-        self.labels = torch.from_numpy(self.labels).long().to(self.device) #turn into one-hot encoding torch.nn.functional.one_hot( , num_classes = -1)
+            self.data = torch.from_numpy(self.data).to(self.device)
+        self.labels = torch.from_numpy(self.labels).long().to(self.device) 
 
         print(f"Data shape: {self.data.shape}, Labels shape: {self.labels.shape}")
     def __len__(self):

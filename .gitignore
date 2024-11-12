@@ -4,6 +4,7 @@
 /Users/arnavkapur/Desktop/EEG_Speech/Speech_EEG/Preprocessing/__pycache__
 /Users/arnavkapur/Desktop/EEG_Speech/Speech_EEG/Classification/cross_validation_train.py
 /Users/arnavkapur/Desktop/EEG_Speech/Speech_EEG/Classification/per_class_analysis.py
+/Users/arnavkapur/Desktop/EEG_Speech/Speech_EEG/Classification/wandb
 /Users/arnavkapur/Desktop/EEG_Speech/DATA/PREPROCESSED
 /Users/arnavkapur/Desktop/EEG_Speech/DATA/RAW
 *.DS_Store

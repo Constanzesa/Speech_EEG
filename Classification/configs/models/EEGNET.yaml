@@ -19,7 +19,7 @@ parameters:
         min: 0.001
         max: 0.01
       input_window_samples:
-        value: 513
+        value: 7196
       final_conv_length:
         value: "auto"
       #Convolutional Module
