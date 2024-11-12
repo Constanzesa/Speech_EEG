@@ -35,26 +35,18 @@ class Dataset_Large():
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.label_names = "labels" #if label == "group" else "labels"
      
-        # Load data and labela
         session_name = "S01"    
         data_dir = "/Users/arnavkapur/Desktop/EEG_Speech/DATA/PREPROCESSED"
         base_path = os.path.join(data_dir, session_name,'sub')
         
-        if train: 
-            data_dir = os.path.join(base_path, train, "data.npy")
-            label_dir = os.path.join(base_path, train, "labels.npy")
-        else:
-            data_dir = os.path.join(base_path, 'val', "data.npy")   
-            label_dir = os.path.join(base_path,'val', "labels.npy")
+       
+        split = 'train' if train else 'val'  
+        data_path = os.path.join(base_path, split, "data.npy")
+        label_path = os.path.join(base_path, split, "labels.npy")
         
-        self.data = np.load(data_dir, allow_pickle=True)  # Shape: (trials, channels, samples)
-        self.labels = np.load(label_dir, allow_pickle=True)  # Shape: (trials,)
-        
-        # Convert to PyTorch tensors
-        # self.data = torch.from_numpy(self.data).type(torch.float32).to(self.device)
-        # self.labels = torch.from_numpy(self.labels).type(torch.LongTensor).to(self.device)  # Convert labels to long tensor
-        # self.labels = self.labels - 1  # Subtract 1 to make labels 0-indexed
-
+        self.data = np.load(data_path, allow_pickle=True)  # Shape: (trials, channels, samples)
+        self.labels = np.load(label_path, allow_pickle=True) 
+       
         if special is None:
             self.data = torch.from_numpy(self.data).to(self.device)
         self.labels = torch.from_numpy(self.labels).long().to(self.device) 
