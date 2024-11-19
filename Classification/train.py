@@ -8,12 +8,9 @@ import wandb
 import yaml
 from data_setup.DataModule import DataModule
 from models.EEGNet import EEGNetv4
-# from pytorch.models.TSception import TSception
-# from pytorch.models.EEGChannelNet import ChannelNet
 from models.EEGNet_Embedding_version import EEGNet_Embedding
-from pytorch_lightning.callbacks import EarlyStopping  # Add this import\
-# from data_setup.PretrainDatamodule import PretrainDatamodule
-# from pytorch.models.Conformer import Conformer
+from pytorch_lightning.callbacks import EarlyStopping  
+from data_setup.Dataset import Dataset_Small
 
 def read_config(config_path: str):
     with open(config_path) as file:
@@ -47,26 +44,19 @@ def combine_configs(head_config):
 
 
 def main(config = None):
-    # Initialize a new wandb run
     wandb.init(config=config)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # Initialize data module
     dm = DataModule(**wandb.config["datamodule"])
-    
     print(f"DataModule Loaded: {dm}")
 
-    # Initialize model
-    # if wandb.config["model_name"] == "TSCEPTION":
-    #     model = TSception(**wandb.config["model"], epochs = wandb.config.trainer["max_epochs"]) 
+    # wandb.config["model"]["datamodule"] = 
+
     if wandb.config["model_name"] == "EEGNET":
         model = EEGNetv4(**wandb.config["model"], epochs = wandb.config.trainer["max_epochs"]) 
-    # elif wandb.config["model_name"] == "CHANNELNET":
-    #     model = ChannelNet(**wandb.config["model"], epochs = wandb.config.trainer["max_epochs"])
-    # elif wandb.config["model_name"] == "CONFORMER":
-    #     model = Conformer(**wandb.config["model"], epochs = wandb.config.trainer["max_epochs"])
     elif wandb.config["model_name"] == "EEGNET_Embedding":
         model = EEGNet_Embedding(**wandb.config["model"], epochs = wandb.config.trainer["max_epochs"]) 
     
+    print("Wandb Config: ", wandb.config)
     print(f"Model Loaded: {model}")
     model = model.to(device)
 

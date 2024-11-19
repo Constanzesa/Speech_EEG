@@ -38,9 +38,11 @@ class base_model(pl.LightningModule):
         #     return [optimizer]
 
     def training_step(self, batch, batch_idx):
+        print("TRAIN",batch[0].shape)
         x,y = batch
         logit = self.forward(x.float()) 
         train_loss = self.loss(logit, y)
+        print("TRAIN LOSS",train_loss)  
         _, y_pred = torch.max(logit, dim = 1)
         self.log("train_loss", train_loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
         self.log("train_acc", self.acc(y_pred, y), on_step=False, on_epoch=True, prog_bar=True, logger=True)
@@ -50,6 +52,7 @@ class base_model(pl.LightningModule):
         x,y = batch
         logit = self.forward(x.float()) 
         val_loss = self.loss(logit, y)
+        print("VAL LOSS",val_loss)
         _, y_pred = torch.max(logit, dim = 1)
         self.log("val_loss", val_loss, on_step=False, on_epoch=True, prog_bar=True, logger=True)
         self.log("val_acc", self.acc(y_pred, y), on_step=False, on_epoch=True, prog_bar=True, logger=True)
@@ -57,8 +60,8 @@ class base_model(pl.LightningModule):
     
     def test_step(self, batch, batch_idx):
         x,y = batch
-        print("TEST")
         logit = self.forward(x.float())
+
         test_loss = self.loss(logit, y)
         _, y_pred = torch.max(logit, dim = 1)
         self.predictions.append(y_pred)
