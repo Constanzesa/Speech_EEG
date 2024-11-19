@@ -8,3 +8,5 @@
 /Users/arnavkapur/Desktop/EEG_Speech/DATA/PREPROCESSED
 /Users/arnavkapur/Desktop/EEG_Speech/DATA/RAW
 *.DS_Store
+/Users/arnavkapur/Desktop/EEG_Speech/Speech_EEG/Classification/wandb
+Classification/wandb/*
