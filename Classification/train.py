@@ -44,7 +44,7 @@ def combine_configs(head_config):
 
 
 def main(config = None):
-    wandb.init(config=config)
+    wandb.init(config=config, project = "SPEECH_EEG")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dm = DataModule(**wandb.config["datamodule"])
     print(f"DataModule Loaded: {dm}")
@@ -90,9 +90,9 @@ def main(config = None):
     # Initialize trainer
     trainer = pl.Trainer(
         max_epochs = wandb.config.trainer["max_epochs"],
-        logger = pl.loggers.WandbLogger(save_dir="/Users/arnavkapur/Desktop/EEG_Speech/Speech_EEG/Classification/wandb"),
+        logger = pl.loggers.WandbLogger(save_dir="./wandb"),
         callbacks = [checkpoint_callback, lr_monitor,early_stopping_callback],
-        default_root_dir="/Users/arnavkapur/Desktop/EEG_Speech/Speech_EEG/Classification/checkpoints", 
+        default_root_dir="./checkpoints", 
         #pl.callbacks.EarlyStopping(monitor="val_acc")
         accelerator="auto"
     )
@@ -118,10 +118,10 @@ def main(config = None):
 # Initialize new sweep (Change subject and model name to run different models)
 # sweep_config = read_config(config_path = "./pytorch/configs/final/P001/EEGNET_P001.yaml")
 
-sweep_config = read_config(config_path = "/Users/arnavkapur/Desktop/EEG_Speech/Speech_EEG/Classification/configs/final/EEGNET.yaml")
+sweep_config = read_config(config_path = "./configs/final/EEGNET.yaml")
 
 sweep_config = combine_configs(sweep_config) #Comment out for test run
-sweep_id = wandb.sweep(sweep_config, project=sweep_config["name"])
+sweep_id = wandb.sweep(sweep_config, project="SPEECH_EEG")
 
 # Run sweep
 wandb.agent(sweep_id, function=main)
@@ -132,7 +132,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--config_path", 
         type=str, 
-        default="/Users/arnavkapur/Desktop/EEG_Speech/Speech_EEG/Classification/configs/final/EEGNET.yaml",
+        default="./configs/final/EEGNET.yaml",
         # default="./pytorch/configs/final/P001/EEGNET_P001.yaml",
         help="Path to config file")
     args = parser.parse_args()
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     sweep_config = read_config(config_path = args.config_path) # Read config file
     print("Using config: {}".format(args.config_path))
     sweep_config = combine_configs(sweep_config)
-    sweep_id = wandb.sweep(sweep_config, project=sweep_config["name"]) # Init sweep
+    sweep_id = wandb.sweep(sweep_config, project=sweep_config["SPEECH_EEG"]) # Init sweep
     wandb.agent(sweep_id, function=main) # Run the sweep
 
 
