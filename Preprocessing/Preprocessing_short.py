@@ -60,7 +60,7 @@ xdf_file_path = os.path.join(data_path, f"{session_name}.xdf")
 
 # Load the .xdf file
 data, header = pyxdf.load_xdf(xdf_file_path)
-# print(f"Successfully loaded data from {xdf_file_path}")
+# print(f"Successfully loaded data from {xdf_file_path}")g
 
 mark_path = ("/Users/arnavkapur/Desktop/EEG_Speech/DATA/marker/")
 mark_session = os.path.join(mark_path, f"{session_name}.csv")

@@ -55,7 +55,7 @@ session_name = args.session_name
 # Use the session_name from the command-line argument
 session_name = args.session_name
 
-base_path = "/Users/arnavkapur/Desktop/EEG_Speech"
+base_path = "C:\\Users\\msi\\Desktop\\Constanze\\Docs\\"
 data_path = os.path.join(base_path, "DATA","RAW")
 
 xdf_file_path = os.path.join(data_path, f"{session_name}.xdf")
@@ -64,7 +64,7 @@ xdf_file_path = os.path.join(data_path, f"{session_name}.xdf")
 data, header = pyxdf.load_xdf(xdf_file_path)
 # print(f"Successfully loaded data from {xdf_file_path}")
 
-mark_path = ("/Users/arnavkapur/Desktop/EEG_Speech/DATA/marker/")
+mark_path = ("C:\\Users\\msi\\Desktop\\Constanze\\Docs\\DATA\\marker")
 mark_session = os.path.join(mark_path, f"{session_name}.csv")
 mark = pd.read_csv(mark_session)
 
@@ -108,8 +108,8 @@ print(f"Duration of the recording: {duration_minutes:.2f} minutes")
 """Filtering the EEG data"""
 
 raw_highpass = raw.copy().filter(l_freq=1, h_freq=None)
-raw_lowpass = raw_highpass.filter(l_freq=None, h_freq=100)
-raw_notch = raw_lowpass.notch_filter(freqs=[60, 120,180])
+# raw_lowpass = raw_highpass.filter(l_freq=None, h_freq=100)
+raw_notch = raw_highpass.notch_filter(freqs=[60, 120,180])
 raw_filtered = raw_notch.copy()
 
 print("RAW Shape", raw_filtered.get_data().shape) 

@@ -1,4 +1,4 @@
 combine:
-- /Users/arnavkapur/Desktop/EEG_Speech/Speech_EEG/Classification/configs/base.yaml
-- /Users/arnavkapur/Desktop/EEG_Speech/Speech_EEG/Classification/configs/models/EEGNET.yaml
-- /Users/arnavkapur/Desktop/EEG_Speech/Speech_EEG/Classification/configs/subjects/ME.yaml
+- ./configs/base.yaml
+- ./configs/models/EEGNET.yaml
+- ./configs/subjects/ME.yaml
