@@ -72,7 +72,6 @@ class DataModule(pl.LightningDataModule):
         train_idx = []
         val_idx = []
         labels = dataset.labels.cpu().numpy() ## CHANGED With cpu()
-        print("jgvvgv", labels.shape)
         for label in np.unique(labels):
             label_loc = np.argwhere(labels == label).flatten()
             np.random.shuffle(label_loc)

@@ -32,6 +32,9 @@ import argparse
 
 import argparse
 
+
+
+
 # If you DO NOT use any of the following arguments, the preprocessing will run with default settings.
 # usage: preprocessing.py [-h] [--id ID] [--test] [--not_prep] [--not_reject] [--count_limit COUNT_LIMIT] [--method_str METHOD_STR] [--ica] [--ransac] [--step]
 # options:
@@ -61,6 +64,7 @@ parser.add_argument('--ransac', '-R', help='Use RANSAC in PREP', action='store_t
 parser.add_argument('--step', '-s', help='Save processed data after each step', action='store_true')
 args = parser.parse_args()
 print(args)
+
 
 try:
     root_folder = '/' # default to “/”, you can change it to the path of the root folder of the dataset

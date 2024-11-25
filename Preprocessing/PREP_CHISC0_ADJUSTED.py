@@ -47,13 +47,20 @@ import argparse
 # base_path = "/Users/arnavkapur/Desktop/EEG_Speech"
 # data_path = os.path.join(base_path, "DATA","RAW")
 
+
+parser = argparse.ArgumentParser(description="Process EEG session data.")
+parser.add_argument("session", type=str, help="Name of the session (e.g., S01)")
+args = parser.parse_args()
+
+session = args.session
+
 # xdf_file_path = os.path.join(data_path, f"{session_name}.xdf")
-xdf_file_path = "C:\\Users\\msi\\Desktop\\Constanze\\Docs\\DATA\\RAW\\S01.xdf"
+xdf_file_path = f"C:\\Users\\msi\\Desktop\\Constanze\\Docs\\DATA\\RAW\\{session}.xdf"
 # Load the .xdf file
 data, header = pyxdf.load_xdf(xdf_file_path)
 print(f"Successfully loaded data from {xdf_file_path}")
 
-csv_file = "C:\\Users\\msi\\Desktop\\Constanze\\Docs\\DATA\\marker\\S01.csv"
+csv_file = f"C:\\Users\\msi\\Desktop\\Constanze\\Docs\\DATA\\marker\\{session}.csv"
 df = pd.read_csv(csv_file, header=None)
 
 sample_rate = 500
@@ -101,49 +108,94 @@ ch_names_new = ['Fpz', 'Fp1', 'Fp2', 'AF3', 'AF4', 'AF7', 'AF8', 'Fz', 'F1', 'F2
 
 
 
-from pyprep.prep_pipeline import PrepPipeline
 
-# Define preprocessing parameters
-prep_params = {
-    "ref_chs": "eeg",
-    "reref_chs": "eeg",
-    "line_freqs": np.arange(60, sample_rate / 2, 60),
-}
 
-# Assign a valid montage (standard 10-20 system)
-montage = 'standard_1020'  # Use the name of the standard montage
+# # Define preprocessing parameters
+# prep_params = {
+#     "ref_chs": "eeg",
+#     "reref_chs": "eeg",
+#     "line_freqs": np.arange(60, sample_rate / 2, 60),
+# }
 
-RANSAC = False
-print("Running pyprep")
+# # Assign a valid montage (standard 10-20 system)
+# montage = 'standard_1020'  # Use the name of the standard montage
 
-prep = PrepPipeline(
-    raw,
-    prep_params,
-    montage=montage,  # Pass the montage name
-    ransac=RANSAC
-)
-prep.fit()
-raw_new = prep.raw
-print("Preprocessing completed.")
-print("Still bad channels: ", raw_new.info['bads'])
+# RANSAC = False
+# print("Running pyprep")
+# sfreq = sample_rate
+# # Define segment length (in seconds)
+# segment_length = 20  # 1-minute chunks
+# sfreq = raw.info['sfreq']  # Sampling frequency
+# n_segments = int(np.ceil(raw.n_times / (sfreq * segment_length)))
+
+# segments = []
+# for i in range(n_segments):
+#     start = int(i * sfreq * segment_length)
+#     stop = min(int((i + 1) * sfreq * segment_length), raw.n_times)
+#     segment = raw.copy().crop(tmin=start / sfreq, tmax=stop / sfreq)
+#     print(f"Segment {i} Shape: {segment.get_data().shape}")
+#     # Run PREP on each segment
+#     prep = PrepPipeline(segment, prep_params, montage=montage, ransac=False)
+#     prep.fit()
+#     # segments.append(prep.raw)
+#     cleaned_segment = prep.raw
+#     cleaned_segment.save(f"segment_{i}.fif", overwrite=True)
+
+# # Combine processed segments
+# raw_new = mne.concatenate_raws(segments)
+# print("Segment-wise processing completed.")
+
+
+# prep = PrepPipeline(
+#     raw,
+#     prep_params,
+#     montage=montage,  # Pass the montage name
+#     ransac=RANSAC
+# # )
+# prep.fit()
+# raw_new = prep.raw
+
+# raw_new = processed_raw
+# print("Preprocessing completed.")
+# print("Still bad channels: ", raw_new.info['bads'])
 
 # High-pass filter
-raw_new.filter(l_freq=1, h_freq=None)
+
+raw_highpass = raw.copy().filter(l_freq=1, h_freq=None)
+raw_lowpass = raw_highpass.filter(l_freq=None, h_freq=100)
+raw_notch = raw_lowpass.notch_filter(freqs=[60, 120,180])
+raw_new = raw_notch.copy()
 
 
 
+# eeg_start = eeg_stream['time_stamps'][0]  # EEG start time, 679.891
+# marker_start = marker_stream['time_stamps'][0]  # Marker start time, 2311465.920826529
 
-eeg_start = eeg_stream['time_stamps'][0]  # EEG start time, 679.891
-marker_start = marker_stream['time_stamps'][0]  # Marker start time, 2311465.920826529
+# time_offset = eeg_stream['clock_times'][0] - eeg_stream['clock_times'][0]
+# aligned_marker_relative = [(ts + time_offset - marker_start + eeg_start) for ts in eeg_stream['time_stamps']]
 
-time_offset = eeg_stream['clock_times'][0] - data[1]['clock_times'][0]
-aligned_marker_relative = [(ts + time_offset - marker_start + eeg_start) for ts in data[1]['time_stamps']]
 
-aligned_pairs = []
-for marker_time in aligned_marker_relative:
-    closest_idx = np.argmin(np.abs(np.array(eeg_stream['time_stamps']) - marker_time))
-    aligned_pairs.append((marker_time, eeg_stream['time_stamps'][closest_idx]))
-df_marker = pd.DataFrame(marker_stream['time_series'], aligned_marker_relative,columns=['marker'])
+eeg_start = eeg_stream['time_stamps'][0]  # EEG start time
+
+print("EEG START", eeg_start)
+# marker_start = data[1]['time_stamps'][0]  # Marker start time
+marker_start = marker_stream['time_stamps'][0]  # Marker start time
+
+time_offset = eeg_stream['clock_times'][0] - marker_stream['clock_times'][0]
+print("TIME OFFSET", time_offset)
+
+# Use NumPy arrays for efficiency, avoid copying unnecessarily
+marker_times = np.asarray(marker_stream['time_stamps'])  # Convert to NumPy array directly
+eeg_time = np.asarray(eeg_stream['time_stamps'])      # Convert to NumPy array directly
+
+# Precompute aligned marker times
+aligned_marker_relative = marker_times + time_offset - marker_start + eeg_start
+
+# aligned_pairs = []
+# for marker_time in aligned_marker_relative:
+#     closest_idx = np.argmin(np.abs(np.array(eeg_stream['time_stamps']) - marker_time))
+#     aligned_pairs.append((marker_time, eeg_stream['time_stamps'][closest_idx]))
+# df_marker = pd.DataFrame(marker_stream['time_series'], aligned_marker_relative,columns=['marker'])
 
 # Extract the sentences column
 sentences = df.iloc[2:, 0].values  # Ensure this is a numpy array or list for proper assignment
@@ -297,13 +349,15 @@ print("MAX Duration", max_duration)
 max_length = max([dataset.shape[0] for dataset in split_datasets])
 
 padded_dataset = []
+
 for dataset in split_datasets:
     num_samples_to_pad = max_length - dataset.shape[0]
     
     if num_samples_to_pad > 0:
-        label = d['label'].iloc[0]  
+        label = int(split_datasets[0]['label'].iloc[0])  # Retrieve the first row's label
         padding_df = pd.DataFrame(0, index=range(num_samples_to_pad), columns=dataset.columns)
-        padding_df['label'] = label 
+        padding_df['label'] = label
+        
         padded_dataset.append(pd.concat([dataset, padding_df], ignore_index=True))
     else:
         padded_dataset.append(dataset)
@@ -322,76 +376,65 @@ print(f"Minimum length: {min_length}")
 print(f"Maximum length: {max_length}")
 
 
-sfreq = sf
-# Convert aligned marker timestamps to sample indices relative to the EEG data
-marker_sample_indices = [
-    int((marker_time - eeg_stream['time_stamps'][0]) * sfreq) 
-    for marker_time in aligned_marker_relative
-]
 
-# Create MNE-compatible events array
-# Assuming `df_marker` contains a 'marker' column with the event codes
-events = np.array([
-    [sample_idx, 0, int(marker)] 
-    for sample_idx, marker in zip(marker_sample_indices, df_marker['marker'])
-])
+## BUILD EPOCHS
 
-# Filter out invalid events (e.g., negative sample indices)
-events = events[events[:, 0] > 0]
+import numpy as np
 
-# Add the events to the Raw object
-print(f"Created {len(events)} events")
-mne.viz.plot_events(events, sfreq=sfreq)
 
-events = events[events[:, 2] == 1]
+first_column = np.round(event_time_series_onset['index'].values).astype(int)
+second_column = np.zeros(len(first_column), dtype=int)
+third_column = event_time_series_onset['labels'].values.astype(int)
+events = np.column_stack((first_column, second_column, third_column))
 
+data = [df.iloc[:, -59:] for df in padded_dataset]
+labels =  [df.iloc[:,1] for df in padded_dataset]
+
+import numpy as np
+
+# Each DataFrame has shape (n_times, n_channels)
+eeg_data_concat = np.concatenate([df.T for df in data], axis=1)  #
+print(f"Shape of concatenated data for RawArray: {eeg_data_concat.shape}")  # (n_channels, n_times)
+info = mne.create_info(ch_names=ch_names_new, sfreq=sample_rate, ch_types="eeg")
+eeg_data = mne.io.RawArray(eeg_data_concat, info)
 
 tmax = max_duration/sample_rate +0.1
-epochs = mne.Epochs(
-    raw, 
-    events, 
-    event_id=None, 
+
+epochs = mne.Epochs( 
+    raw=eeg_data, 
+    events=events,
     tmin=0, 
     tmax= tmax, 
-    metadata=metadata, 
-    baseline=None,  # No baseline correction
-    preload=True, 
-    reject= None, 
-    reject_by_annotation = False, 
-    on_missing='ignore'  # Allow shorter epochs
-)
+    baseline = None,
+    metadata= metadata, 
+    preload = True)
 
-print(f"Metadata shape: {epochs.metadata.shape}")
 
 
 import os
-import pickle
 
-# File path to save the pickle file
-file_path = "C:\\Users\\msi\\Desktop\\Constanze\\Docs\\DATA\\PREPROCESSED\\PREP_CH\\data.pkl"
+print("Saving preprocessed data...")
 
-# # Drop bad epochs if they haven't been dropped yet
-# if not epochs._bad_dropped:
-#     epochs.drop_bad()
+data_path = "C:\\Users\\msi\\Desktop\\Constanze\\Docs\\DATA\\"
+folder_path = os.path.join(data_path, 'PREPROCESSED','PREP_CH', session )
+if not os.path.exists(folder_path):
+    os.makedirs(folder_path)
 
-# Prepare the list to save data
 data_to_save = []
+
 for epoch_idx in range(len(epochs)):
     # Extract sentence (or None if metadata is unavailable)
     sentence = (
         epochs.metadata.iloc[epoch_idx]['sentences'] 
         if epochs.metadata is not None else None
     )
-
-    # Extract epoch data without copying
     data = epochs[epoch_idx].get_data(copy=True)
     print(f"Epoch {epoch_idx} data shape: {data.shape}")
-
-    # Append data and metadata to the list
     data_to_save.append({"text": sentence, "input_features": data})
-
-# Open the file in binary write mode and save the data
+file_path = os.path.join(folder_path, 'data.pkl')
 with open(file_path, 'wb') as file:
     pickle.dump(data_to_save, file)
 
+print(data_to_save)
 print(f"Data successfully saved to {file_path}")
+

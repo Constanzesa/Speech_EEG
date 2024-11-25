@@ -181,8 +181,8 @@ raw_new.filter(l_freq=1, h_freq=None)
 eeg_start = eeg_stream['time_stamps'][0]  # EEG start time, 679.891
 marker_start = marker_stream['time_stamps'][0]  # Marker start time, 2311465.920826529
 
-time_offset = eeg_stream['clock_times'][0] - data[1]['clock_times'][0]
-aligned_marker_relative = [(ts + time_offset - marker_start + eeg_start) for ts in data[1]['time_stamps']]
+time_offset = eeg_stream['clock_times'][0] - eeg_stream['clock_times'][0]
+aligned_marker_relative = [(ts + time_offset - marker_start + eeg_start) for ts in eeg_stream['time_stamps']]
 
 aligned_pairs = []
 for marker_time in aligned_marker_relative:
@@ -302,4 +302,11 @@ if ICA:
     #     for (epoch, type_str) in [(epochs_clean_r_reconstructed, 'read'), (epochs_clean_i_reconstructed, 'imagine')]:
     #         save_epochs_to_pickle(epoch, edf_file, type_str, '_rej_ica')
 
+      
+def save_epochs_to_fif(epochs, edf_file, type_str, extra_str=''):
+
+    if not os.path.exists(os.path.join(output_folder,f'fif-epo{extra_str}')):
+        os.makedirs(os.path.join(output_folder,f'fif-epo{extra_str}'))
+
+    epochs.save(os.path.join(output_folder,f'fif-epo{extra_str}',f"{os.path.basename(edf_file).replace('.edf', '')}_{subject_id}_{type_str}_{method_str}{extra_str}-epo.fif"), overwrite=True)
 
