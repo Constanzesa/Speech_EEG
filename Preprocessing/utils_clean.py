@@ -46,7 +46,6 @@ def find_stream(name, streams):
         name = 'E7240457_EEG'
     elif name == 'marker':
         name = 'LSLTrigger'
-
     else:
         assert False
 

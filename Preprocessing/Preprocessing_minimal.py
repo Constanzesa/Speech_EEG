@@ -55,7 +55,7 @@ session_name = args.session_name
 # Use the session_name from the command-line argument
 session_name = args.session_name
 
-base_path = "C:\\Users\\msi\\Desktop\\Constanze\\Docs\\"
+base_path = "/Users/arnavkapur/Desktop/EEG_Speech"
 data_path = os.path.join(base_path, "DATA","RAW")
 
 xdf_file_path = os.path.join(data_path, f"{session_name}.xdf")
@@ -64,10 +64,9 @@ xdf_file_path = os.path.join(data_path, f"{session_name}.xdf")
 data, header = pyxdf.load_xdf(xdf_file_path)
 # print(f"Successfully loaded data from {xdf_file_path}")
 
-mark_path = ("C:\\Users\\msi\\Desktop\\Constanze\\Docs\\DATA\\marker")
+mark_path = ("/Users/arnavkapur/Desktop/EEG_Speech/DATA/marker/")
 mark_session = os.path.join(mark_path, f"{session_name}.csv")
 mark = pd.read_csv(mark_session)
-
 
 
 name = session_name
@@ -77,7 +76,13 @@ marker_stream = find_stream('marker', data)
 df_marker = get_time_series(marker_stream)
 sfreq = float(eeg_stream["info"]["nominal_srate"][0])
 
+## Identify channel position for Neurable headset
 
+# channels_info = data[3]['info']['desc'][0]['channels'][0]['channel']
+
+# # Extract labels from each channel
+# ch_names = [channel['label'][0] for channel in channels_info]
+# # print("Channel names", ch_names)
 ch_names = ['Fpz', 'Fp1', 'Fp2', 'AF3', 'AF4', 'AF7', 'AF8', 'Fz', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'FCz', 'FC1', 'FC2', 'FC3', 'FC4', 'FC5', 'FC6', 'FT7', 'FT8', 'Cz', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'T7', 'T8', 'CP1', 'CP2', 'CP3', 'CP4', 'CP5', 'CP6', 'TP7', 'TP8', 'Pz', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'POz', 'PO3', 'PO4', 'PO5', 'PO6', 'PO7', 'PO8', 'Oz', 'O1', 'O2', 'ECG', 'HEOR', 'HEOL', 'VEOU', 'VEOL']
 
 
@@ -103,8 +108,8 @@ print(f"Duration of the recording: {duration_minutes:.2f} minutes")
 """Filtering the EEG data"""
 
 raw_highpass = raw.copy().filter(l_freq=1, h_freq=None)
-# raw_lowpass = raw_highpass.filter(l_freq=None, h_freq=100)
-raw_notch = raw_highpass.notch_filter(freqs=[60, 120,180])
+raw_lowpass = raw_highpass.filter(l_freq=None, h_freq=100)
+raw_notch = raw_lowpass.notch_filter(freqs=[60, 120,180])
 raw_filtered = raw_notch.copy()
 
 print("RAW Shape", raw_filtered.get_data().shape) 
@@ -125,7 +130,14 @@ channel_correlation = plot_channel_correlation(raw_filtered.get_data(), ch_names
 bad_channels = channel_correlation[1]
 bad_channels_2 = detect_bad_channels(raw_filtered.get_data(), ch_names)
 
+# # Input for bad_visual
+# print("Please visually inspect the raw plot and provide additional bad channels (comma-separated):")
+# bad_visual_input = input("Enter channels (e.g., 'T8, C6, P7'): ").strip()
+# bad_visual = [ch.strip() for ch in bad_visual_input.split(",") if ch.strip()]
 
+# # Combine all bad channels
+
+# bad_channels.extend(bad_visual)
 bads = ['ECG', 'HEOR', 'HEOL', 'VEOU', 'VEOL']
 bad_channels.extend(bads)
 bad_channels.extend(bad_channels_2)
@@ -138,22 +150,52 @@ raw_removed.info['bads'] = bad_channels
 #raw_removed.set_montage('standard_1020', on_missing='warn')
 print("bads", raw_removed.info['bads'])
 
+# montage = raw_removed.get_montage()
+
+# if montage is not None:
+#     # Get the channel positions from the montage
+#     positions = montage.get_positions()['ch_pos']
+
+#     # Adjust positions for overlapping channels
+#     if 'VEOU' in positions and 'VEOL' in positions:
+#         positions['VEOU'][0] += 0.01  # Adjust x-coordinate for VEOU
+#         positions['VEOL'][0] -= 0.01  # Adjust x-coordinate for VEOL
+
+#         # Create a new montage with the adjusted positions
+#         new_montage = mne.channels.make_dig_montage(
+#             ch_pos=positions,
+#             coord_frame='head'
+#         )
+
+#         # Apply the modified montage to the raw data
+#         raw_removed.set_montage(new_montage)
 
 set_channel_names(raw_removed, ch_names)
 
 print("START WITH DATA")
+
+# Retrieve and print necessary values
+# eeg_start = data[3]['time_stamps'][0]  # EEG start time
 eeg_start = eeg_stream['time_stamps'][0]  # EEG start time
+
 print("EEG START", eeg_start)
+# marker_start = data[1]['time_stamps'][0]  # Marker start time
 marker_start = marker_stream['time_stamps'][0]  # Marker start time
+
 time_offset = eeg_stream['clock_times'][0] - marker_stream['clock_times'][0]
 print("TIME OFFSET", time_offset)
+
+# Use NumPy arrays for efficiency, avoid copying unnecessarily
 marker_times = np.asarray(marker_stream['time_stamps'])  # Convert to NumPy array directly
 eeg_time = np.asarray(eeg_stream['time_stamps'])      # Convert to NumPy array directly
+
+# Precompute aligned marker times
 aligned_marker_relative = marker_times + time_offset - marker_start + eeg_start
 
 # Use a more memory-efficient method for finding closest indices
 # Instead of creating the full difference matrix, iterate over aligned_marker_relative
 closest_indices = np.empty(len(aligned_marker_relative), dtype=np.int64)
+
 for i, marker_time in enumerate(aligned_marker_relative):
     closest_indices[i] = np.abs(eeg_time - marker_time).argmin()
 

@@ -9,19 +9,23 @@ import os
 
 class Dataset_Small:
     def __init__(self, data_dir: Path, label: Literal["labels"], train: bool = True):
-        self.label_names = "labels" 
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        self.label_names = "label" 
         self.data = []
         self.labels = []
-
+        print("DATA DIR", data_dir) 
         trials = sorted(data_dir.glob("S*"))
-
+        print("TRIALS:", trials)
         print(f"Found sessions: {len(trials)}")
 
         for file_path in trials:
             data_path = file_path / "data.npy"
-            _labels_path = file_path / "labels.npy" 
+            _labels_path = file_path / "label.npy" 
             _labels = np.load(_labels_path, allow_pickle=True)  
-       
+            
+            data = np.load(data_path, allow_pickle=True)
+            
                 
             if train:
                 selection = np.concatenate([np.argwhere(_labels == label_id).flatten()[:-5] for label_id in np.unique(_labels)])
@@ -31,38 +35,64 @@ class Dataset_Small:
             
             selected_data = np.load(data_path, allow_pickle=True)[selection]
             selected_labels = _labels[selection]
-            
-            # # Append each session's data and labels to the list
+
             # self.data.append(selected_data)
             # self.labels.append(selected_labels)
+            
+            
+            # # Append each session's data and labels to the list
+            self.data.append(selected_data)
+            self.labels.append(selected_labels)
             # self.max_trial_length = max([self.data[d].shape[2] for d in range(len(self.data))])
             # print("MAX TRIAL LENGTH", self.max_trial_length)
             # for d in range(len(self.data)):
             #     # Pad each trial to the maximum length
             #     padding = self.max_trial_length - self.data[d].shape[2]
             #     self.data[d] = np.pad(self.data[d], ((0, 0), (0, 0), (0, padding)), mode="constant")
-            max_length = 7800
+            # max_length = 7800
+            # # Adjust the length of each trial
+            # adjusted_data = []
+            # for trial in self.data:
+            #     if trial.shape[1] > max_length:
+            #         trial = trial[:, :max_length]  # Truncate to max_length
+            #     elif trial.shape[1] < max_length:
+            #         padding = max_length - trial.shape[1]
+            #         trial = np.pad(trial, ((0, 0), (0, padding)), mode="constant")  # Pad to max_length
+            #     adjusted_data.append(trial)
+            # adjusted_data = np.array(adjusted_data)
+            # # # Append each session's adjusted data and labels to the list
+            # self.data.append(adjusted_data)
+            # self.labels.append(selected_labels)
+
+
             # Adjust the length of each trial
-            adjusted_data = []
-            for trial in selected_data:
-                if trial.shape[1] > max_length:
-                    trial = trial[:, :max_length]  # Truncate to max_length
-                elif trial.shape[1] < max_length:
-                    padding = max_length - trial.shape[1]
-                    trial = np.pad(trial, ((0, 0), (0, padding)), mode="constant")  # Pad to max_length
-                adjusted_data.append(trial)
-            adjusted_data = np.array(adjusted_data)
+
+            # max_length = 7800
+            # adjusted_data = []
+            # for trial in selected_data:
+            #     if trial.shape[1] > max_length:
+            #         trial = trial[:, :max_length]  # Truncate to max_length
+            #     elif trial.shape[1] < max_length:
+            #         padding = max_length - trial.shape[1]
+            #         trial = np.pad(trial, ((0, 0), (0, padding)), mode="constant")  # Pad to max_length
+            #     adjusted_data.append(trial)
+            # adjusted_data = np.array(adjusted_data)
             # # Append each session's adjusted data and labels to the list
-            self.data.append(adjusted_data)
-            self.labels.append(selected_labels)
+            # self.data.append(adjusted_data)
+            # self.labels.append(selected_labels)
+ 
 
         self.data = np.concatenate(self.data, axis=0)  
         print("COMBINED DATA", self.data.shape)
         self.labels = np.concatenate(self.labels, axis=0) 
-        print("COMBINED LABELS", self.lables.shape)
+        print("COMBINED LABELS", self.labels.shape)
 
         self.data = torch.from_numpy(self.data).float() #swap axes to get (n_trials, channels, samples) 
         self.labels = torch.from_numpy(self.labels).long() #turn into one-hot encoding torch.nn.functional.one_hot( , num_classes = -1)
+
+        self.data = self.data.to(self.device) #swap axes to get (n_trials, channels, samples) 
+        self.labels = self.labels.to(self.device) #turn into one-hot encoding torch.nn.functional.one_hot( , num_classes = -1)
+
 
     def __len__(self):
         return len(self.labels)

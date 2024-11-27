@@ -52,7 +52,7 @@ class DataModule(pl.LightningDataModule):
             self.dataset = Dataset_Small(Path(self.data_dir), label="group", train=True)
             
             # Perform stratified random split
-            train_idx, val_idx = self._stratified_random_split(self.dataset, split=[0.8, 0.2], seed=self.seed) 
+            train_idx, val_idx = self._stratified_random_split(self.dataset, split=[0.9, 0.1], seed=self.seed) 
             
             # Use Subset to create train and validation datasets
             self.train_dataset = Subset(self.dataset, train_idx)
@@ -67,7 +67,7 @@ class DataModule(pl.LightningDataModule):
                 pass
 
 
-    def _stratified_random_split(self, dataset, split: List = [0.8, 0.2], seed: int = None):
+    def _stratified_random_split(self, dataset, split: List = [0.9, 0.1], seed: int = None):
         #Splits a dataset into train and validation set while preserving the class distribution.
         np.random.seed(seed) if seed else None
         train_idx = []

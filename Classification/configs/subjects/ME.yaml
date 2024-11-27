@@ -3,15 +3,12 @@ parameters:
   datamodule:
     parameters:
       data_dir: 
-        value: "C:\\Users\\msi\\Desktop\\Constanze\\Docs\\DATA\\PREPROCESSED\\PREP_MINIMAL"
+        value: "/Users/arnavkapur/Desktop/EEG_Speech/DATA/PROCESSING_CHISCO/EEG_NET_Format"
       # val_run: 
       #   value: "/Users/arnavkapur/Desktop/EEG_Speech/DATA/PREPROCESSED/S01/eeg.npy"
-      # batch_size:
-      #    values: 32
-      # binary_classes: ## ADD THIS only for 2 class classification
-      #   value: [0,1]
+      batch_size:
+        values: [64, 128] #[32, 128]
       num_workers:
-        value: 0
+        value: 4
       seed:
         value: 42
-
