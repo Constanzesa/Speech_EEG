@@ -14,7 +14,6 @@ class Dataset_Small:
         self.label_names = "label" 
         self.data = []
         self.labels = []
-        print("DATA DIR", data_dir) 
         trials = sorted(data_dir.glob("S*"))
         print("TRIALS:", trials)
         print(f"Found sessions: {len(trials)}")

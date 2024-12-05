@@ -7,7 +7,7 @@ parameters:
       # val_run: 
       #   value: "/Users/arnavkapur/Desktop/EEG_Speech/DATA/PREPROCESSED/S01/eeg.npy"
       batch_size:
-        values: [64, 128] #[32, 128]
+        values: [32, 64, 128] #[32, 128]
       num_workers:
         value: 4
       seed:

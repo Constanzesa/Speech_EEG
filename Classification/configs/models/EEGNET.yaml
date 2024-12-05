@@ -32,6 +32,6 @@ parameters:
       kernel_length:
         value: 64 
       pool_mode:
-        value: ["max","mean"]
+        value: "mean"
       momentum:
         value: 0.1 
